@@ -1,6 +1,10 @@
 import React, { Component } from "react";
 import "./App.css";
 
+import Amplify, { Auth } from 'aws-amplify';
+import awsconfig from './aws-exports';
+Amplify.configure(awsconfig);
+
 class App extends Component {
   constructor(props) {
     super(props);
