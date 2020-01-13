@@ -3,6 +3,7 @@ import "./App.css";
 
 import * as queries from "./graphql/queries";
 import * as mutations from "./graphql/mutations";
+import * as subscriptions from "./graphql/subscriptions";
 
 import { withAuthenticator } from "aws-amplify-react";
 import Amplify, { Auth, API, graphqlOperation } from "aws-amplify";
@@ -41,6 +42,7 @@ class App extends Component {
         graphqlOperation(mutations.createTodo, createTodoInput)
       );
     } catch (error) {
+      console.log("addTodo error: ", error);
     } finally {
       this.refs.newTodo.value = "";
     }
@@ -48,6 +50,28 @@ class App extends Component {
 
   componentDidMount() {
     this.getTodos();
+
+    try {
+      API.graphql(graphqlOperation(subscriptions.onCreateTodo)).subscribe({
+        next: result => {
+          console.log("result: ", result);
+          const { items } = this.state;
+          items.push(result.value.data.onCreateTodo);
+          this.setState({ items });
+        }
+      });
+      API.graphql(graphqlOperation(subscriptions.onUpdateTodo)).subscribe({
+        next: result => {
+          const items = this.state.items;
+          const todo = result.value.data.onUpdateTodo;
+          const idx = items.findIndex(item => item.id === todo.id);
+          items[idx] = todo;
+          this.setState({ items });
+        }
+      });
+    } catch (error) {
+      console.log("subscriptions error: ", error);
+    }
   }
 
   render() {
@@ -80,12 +104,30 @@ class TodoList extends Component {
 }
 
 class TodoItem extends Component {
+  updateTodoStatus = async event => {
+    try {
+      const { item } = this.props;
+      const todoStatus = event.target.checked ? "DONE" : "NOT DONE";
+      const updateTodoInput = {
+        input: { id: item.id, name: item.name, status: todoStatus }
+      };
+      await API.graphql(
+        graphqlOperation(mutations.updateTodo, updateTodoInput)
+      );
+    } catch (error) {
+      console.log("updateTodoStatus error: ", error);
+    }
+  };
   render() {
     const { item } = this.props;
 
     return (
       <li>
-        <input type="checkbox" />
+        <input
+          type="checkbox"
+          checked={item.status === "DONE"}
+          onChange={this.updateTodoStatus}
+        />
         {item.name}
       </li>
     );
