@@ -1,8 +1,9 @@
 import React, { Component } from "react";
 import "./App.css";
 
-import Amplify, { Auth } from 'aws-amplify';
-import awsconfig from './aws-exports';
+import { withAuthenticator } from "aws-amplify-react";
+import Amplify, { Auth } from "aws-amplify";
+import awsconfig from "./aws-exports";
 Amplify.configure(awsconfig);
 
 class App extends Component {
@@ -57,4 +58,4 @@ class TodoItem extends Component {
   }
 }
 
-export default App;
+export default withAuthenticator(App);
