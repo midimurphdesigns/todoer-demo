@@ -19,6 +19,11 @@ class App extends Component {
     };
   }
 
+  logout = () => {
+    Auth.signOut();
+    window.location.reload();
+  }
+
   render() {
     return (
       <div className="App">
@@ -26,6 +31,7 @@ class App extends Component {
           <h1>TODO List</h1>
           <TodoList items={this.state.items} />
         </main>
+        <button onClick={this.logout}>Log Out</button>
       </div>
     );
   }
