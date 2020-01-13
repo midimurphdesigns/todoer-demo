@@ -1,8 +1,11 @@
 import React, { Component } from "react";
 import "./App.css";
 
+import * as queries from "./graphql/queries";
+import * as mutations from "./graphql/mutations";
+
 import { withAuthenticator } from "aws-amplify-react";
-import Amplify, { Auth } from "aws-amplify";
+import Amplify, { Auth, API, graphqlOperation } from "aws-amplify";
 import awsconfig from "./aws-exports";
 Amplify.configure(awsconfig);
 
@@ -11,17 +14,40 @@ class App extends Component {
     super(props);
 
     this.state = {
-      items: [
-        { name: "Feed the cat", status: "NEW" },
-        { name: "Discover purpose of life", status: "NEW" },
-        { name: "Learn to cloud", status: "NEW" }
-      ]
+      items: []
     };
   }
 
   logout = () => {
     Auth.signOut();
     window.location.reload();
+  };
+
+  getTodos = async () => {
+    try {
+      const result = await API.graphql(graphqlOperation(queries.listTodos));
+      this.setState({ items: result.data.listTodos.items });
+    } catch (error) {
+      alert("getTodos error: ", error);
+    }
+  };
+
+  addTodo = async () => {
+    try {
+      const createTodoInput = {
+        input: { name: this.refs.newTodo.value, status: "NEW" }
+      };
+      await API.graphql(
+        graphqlOperation(mutations.createTodo, createTodoInput)
+      );
+    } catch (error) {
+    } finally {
+      this.refs.newTodo.value = "";
+    }
+  };
+
+  componentDidMount() {
+    this.getTodos();
   }
 
   render() {
@@ -30,6 +56,8 @@ class App extends Component {
         <main>
           <h1>TODO List</h1>
           <TodoList items={this.state.items} />
+          <input type="text" ref="newTodo" />
+          <button onClick={this.addTodo}>Add Todo</button>
         </main>
         <button onClick={this.logout}>Log Out</button>
       </div>

@@ -1,0 +1,11 @@
+{
+    "AppSyncApiName": "todoerdemo",
+    "DynamoDBBillingMode": "PAY_PER_REQUEST",
+    "DynamoDBEnableServerSideEncryption": "false",
+    "AuthCognitoUserPoolId": {
+        "Fn::GetAtt": [
+            "authtodoerdemof87b7f18",
+            "Outputs.UserPoolId"
+        ]
+    }
+}
